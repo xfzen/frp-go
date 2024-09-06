@@ -4,8 +4,8 @@ package handler
 import (
 	"net/http"
 
-	frpgotest "frp-go/api/internal/handler/frpgo/test"
-	"frp-go/api/internal/svc"
+	frpgotest "frpgo/api/internal/handler/frpgo/test"
+	"frpgo/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )

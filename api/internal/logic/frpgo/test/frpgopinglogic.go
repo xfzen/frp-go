@@ -3,7 +3,8 @@ package test
 import (
 	"context"
 
-	"frp-go/api/internal/svc"
+	"frpgo/api/internal/svc"
+
 	"github.com/zeromicro/go-zero/core/logx"
 )
 

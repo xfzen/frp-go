@@ -3,8 +3,9 @@ package test
 import (
 	"net/http"
 
-	"frp-go/api/internal/logic/frpgo/test"
-	"frp-go/api/internal/svc"
+	"frpgo/api/internal/logic/frpgo/test"
+	"frpgo/api/internal/svc"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 

@@ -1,7 +1,7 @@
 package svc
 
 import (
-	"frp-go/config"
+	"frpgo/config"
 )
 
 type ServiceContext struct {

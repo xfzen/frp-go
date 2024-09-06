@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 
-	"frp-go/api/internal/handler"
-	"frp-go/api/internal/svc"
-	"frp-go/config"
+	"frpgo/api/internal/handler"
+	"frpgo/api/internal/svc"
+	"frpgo/config"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
