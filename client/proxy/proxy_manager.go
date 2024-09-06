@@ -22,12 +22,14 @@ import (
 	"sync"
 
 	"github.com/samber/lo"
+	"github.com/zeromicro/go-zero/core/logx"
 
 	"frpgo/client/event"
 	v1 "frpgo/pkg/config/v1"
 	"frpgo/pkg/msg"
 	"frpgo/pkg/transport"
 	"frpgo/pkg/util/xlog"
+	"frpgo/pkg2/utils2"
 )
 
 type Manager struct {
@@ -58,6 +60,8 @@ func NewManager(
 }
 
 func (pm *Manager) StartProxy(name string, remoteAddr string, serverRespErr string) error {
+	logx.Debugf("StartProxy name: %v, remoteAddr: %v, serverRespErr: %v", name, remoteAddr, serverRespErr)
+
 	pm.mu.RLock()
 	pxy, ok := pm.proxies[name]
 	pm.mu.RUnlock()
@@ -86,6 +90,8 @@ func (pm *Manager) Close() {
 }
 
 func (pm *Manager) HandleWorkConn(name string, workConn net.Conn, m *msg.StartWorkConn) {
+	logx.Debugf("HandleWorkConn")
+
 	pm.mu.RLock()
 	pw, ok := pm.proxies[name]
 	pm.mu.RUnlock()
@@ -158,6 +164,9 @@ func (pm *Manager) UpdateAll(proxyCfgs []v1.ProxyConfigurer) {
 	addPxyNames := make([]string, 0)
 	for _, cfg := range proxyCfgs {
 		name := cfg.GetBaseConfig().Name
+
+		logx.Debugf("Name: %v", name)
+
 		if _, ok := pm.proxies[name]; !ok {
 			pxy := NewWrapper(pm.ctx, cfg, pm.clientCfg, pm.HandleEvent, pm.msgTransporter)
 			if pm.inWorkConnCallback != nil {
@@ -172,4 +181,48 @@ func (pm *Manager) UpdateAll(proxyCfgs []v1.ProxyConfigurer) {
 	if len(addPxyNames) > 0 {
 		xl.Infof("proxy added: %s", addPxyNames)
 	}
+}
+
+// 创建新的代理（tcp或http）
+func (pm *Manager) CreateProxy(proxyType string, name string, localIP string, localPort int, remotePort int) error {
+	cfg := v1.NewProxyConfigurerByType(v1.ProxyType(proxyType))
+	if cfg == nil {
+		return fmt.Errorf("new proxy configurer error")
+	}
+
+	cfg.GetBaseConfig().Name = name
+	cfg.GetBaseConfig().Type = proxyType
+	cfg.GetBaseConfig().LocalIP = localIP
+	cfg.GetBaseConfig().LocalPort = localPort
+
+	serverIp := pm.clientCfg.ServerAddr
+
+	switch proxyType {
+	case string(v1.ProxyTypeTCP):
+		cfg.(*v1.TCPProxyConfig).RemotePort = remotePort
+	default:
+		cfg.(*v1.TCPProxyConfig).RemotePort = remotePort
+	}
+
+	logx.Debugf("CreateProxy serverIp: %v, proxyCfg: %v", serverIp, utils2.PrettyJson(cfg))
+
+	pxy := NewWrapper(pm.ctx, cfg, pm.clientCfg, pm.HandleEvent, pm.msgTransporter)
+	if pm.inWorkConnCallback != nil {
+		pxy.SetInWorkConnCallback(pm.inWorkConnCallback)
+	}
+
+	pm.proxies[name] = pxy
+
+	pxy.Start()
+
+	return nil
+}
+
+func (pm *Manager) GetProxyDetail(name string) (*WorkingDetial, bool) {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+	if pxy, ok := pm.proxies[name]; ok {
+		return pxy.GetDetial(), true
+	}
+	return nil, false
 }

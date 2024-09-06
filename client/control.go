@@ -29,6 +29,9 @@ import (
 	netpkg "frpgo/pkg/util/net"
 	"frpgo/pkg/util/wait"
 	"frpgo/pkg/util/xlog"
+	"frpgo/pkg2/utils2"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type SessionContext struct {
@@ -119,6 +122,8 @@ func (ctl *Control) SetInWorkConnCallback(cb func(*v1.ProxyBaseConfig, net.Conn,
 }
 
 func (ctl *Control) handleReqWorkConn(_ msg.Message) {
+	logx.Debugf("handleReqWorkConn")
+
 	xl := ctl.xl
 	workConn, err := ctl.connectServer()
 	if err != nil {
@@ -157,6 +162,8 @@ func (ctl *Control) handleReqWorkConn(_ msg.Message) {
 }
 
 func (ctl *Control) handleNewProxyResp(m msg.Message) {
+	logx.Debugf("handleNewProxyResp m: %v", utils2.PrettyJson(m))
+
 	xl := ctl.xl
 	inMsg := m.(*msg.NewProxyResp)
 	// Server will return NewProxyResp message to each NewProxy message.
@@ -284,6 +291,8 @@ func (ctl *Control) worker() {
 }
 
 func (ctl *Control) UpdateAllConfigurer(proxyCfgs []v1.ProxyConfigurer, visitorCfgs []v1.VisitorConfigurer) error {
+	logx.Debugf("UpdateAllConfigurer")
+
 	ctl.vm.UpdateAll(visitorCfgs)
 	ctl.pm.UpdateAll(proxyCfgs)
 	return nil

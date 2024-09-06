@@ -1,0 +1,72 @@
+info(
+	title: "frpgo admin接口"
+	desc: "frp客户端接口"
+	author: "essen"
+	email: "hoksum.guo@gmail.com"
+	version: 1.0
+)
+
+@server(
+	group: frpgo/admin
+	// middleware: CheckAuth // 路由中间件声明
+  prefix: /api
+)
+
+service frpgo-api {
+	@handler startTunnel
+	post /tunnels (StartTunnelReq) returns (StartTunnelResp)
+
+  @handler stopTunnel
+	delete /tunnels/:name returns (StopTunnelResp)
+
+	@handler getTunnelDetial
+	get /tunnels/:name (GetTunnelDetailReq) returns (GetTunnelDetialResp)
+
+  @handler listCapturedRequest
+	get /requests/http/:limit/:tunnel_name returns (ListCaptureRequestResp)
+}
+
+type (
+  ConfigInfo {
+    Addr      string `json:"addr"`
+		Inspect   bool `json:"inspect"`
+  }
+
+	StartTunnelReq {
+		Name  		string `json:"name"`
+		Type 			string `json:"type"` 
+    LocalIP  	string `json:"local_ip"` 
+		LocalPort  	int `json:"local_port"` 
+    RemotePort  int `json:"remote_port"` 
+	}
+
+	StartTunnelResp {
+    Name      string `json:"name"`        //
+		URI       string `json:"uri"`         // /api/tunnels
+    PublicUrl string `json:"public_url"`  // tcp://****.3232
+    Proto     string `json:"proto"`       // tcp
+    Config    ConfigInfo `json:"config"`  //
+	}
+
+  StopTunnelResp {
+    ErrCode string `json:"errcode"`
+		ErrTxt  string `json:"errtxt"`
+		Respond    string `json:"respond"`
+	}
+
+	GetTunnelDetailReq {
+		Name string `path:"name"`
+	}
+
+	GetTunnelDetialResp {
+		Token        string `json:"token"`
+		AccessExpire string `json:"accessExpire"`
+		RefreshAfter string `json:"refreshAfter"`
+	}
+
+	ListCaptureRequestResp {
+    ErrCode string `json:"errcode"`
+		ErrTxt  string `json:"errtxt"`
+		Respond    ConfigInfo `json:"respond"`
+	}
+)

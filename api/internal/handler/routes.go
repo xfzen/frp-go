@@ -4,6 +4,7 @@ package handler
 import (
 	"net/http"
 
+	frpgoadmin "frpgo/api/internal/handler/frpgo/admin"
 	frpgotest "frpgo/api/internal/handler/frpgo/test"
 	"frpgo/api/internal/svc"
 
@@ -19,6 +20,32 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: frpgotest.FrpgoPingHandler(serverCtx),
 			},
 		},
-		rest.WithPrefix("/api/v1/frp"),
+		rest.WithPrefix("/api"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/tunnels",
+				Handler: frpgoadmin.StartTunnelHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/tunnels/:name",
+				Handler: frpgoadmin.StopTunnelHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/tunnels/:name",
+				Handler: frpgoadmin.GetTunnelDetialHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/requests/http/:limit/:tunnel_name",
+				Handler: frpgoadmin.ListCapturedRequestHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api"),
 	)
 }

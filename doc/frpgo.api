@@ -5,9 +5,11 @@ info(
 	email: "hoksum.guo@gmail.com"
 )
 
+import "admin/admin.api"
+
 @server(
 	group: frpgo/test
-	prefix: /api/v1/frp
+	prefix: /api
 )
 
 service frpgo-api {

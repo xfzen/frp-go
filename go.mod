@@ -8,6 +8,7 @@ require (
 	github.com/fatedier/golib v0.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/yamux v0.1.1
+	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pion/stun/v2 v2.0.0
 	github.com/pires/go-proxyproto v0.7.0

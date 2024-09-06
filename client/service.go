@@ -21,11 +21,11 @@ import (
 	"net"
 	"os"
 	"runtime"
-	"sync"
 	"time"
 
 	"github.com/fatedier/golib/crypto"
 	"github.com/samber/lo"
+	"github.com/zeromicro/go-zero/core/logx"
 
 	"frpgo/client/proxy"
 	"frpgo/pkg/auth"
@@ -49,117 +49,47 @@ func init() {
 	}
 }
 
-type cancelErr struct {
-	Err error
-}
-
-func (e cancelErr) Error() string {
-	return e.Err.Error()
-}
-
-// ServiceOptions contains options for creating a new client service.
-type ServiceOptions struct {
-	Common      *v1.ClientCommonConfig
-	ProxyCfgs   []v1.ProxyConfigurer
-	VisitorCfgs []v1.VisitorConfigurer
-
-	// ConfigFilePath is the path to the configuration file used to initialize.
-	// If it is empty, it means that the configuration file is not used for initialization.
-	// It may be initialized using command line parameters or called directly.
-	ConfigFilePath string
-
-	// ClientSpec is the client specification that control the client behavior.
-	ClientSpec *msg.ClientSpec
-
-	// ConnectorCreator is a function that creates a new connector to make connections to the server.
-	// The Connector shields the underlying connection details, whether it is through TCP or QUIC connection,
-	// and regardless of whether multiplexing is used.
-	//
-	// If it is not set, the default frpc connector will be used.
-	// By using a custom Connector, it can be used to implement a VirtualClient, which connects to frps
-	// through a pipe instead of a real physical connection.
-	ConnectorCreator func(context.Context, *v1.ClientCommonConfig) Connector
-
-	// HandleWorkConnCb is a callback function that is called when a new work connection is created.
-	//
-	// If it is not set, the default frpc implementation will be used.
-	HandleWorkConnCb func(*v1.ProxyBaseConfig, net.Conn, *msg.StartWorkConn) bool
-}
-
-// setServiceOptionsDefault sets the default values for ServiceOptions.
-func setServiceOptionsDefault(options *ServiceOptions) {
-	if options.Common != nil {
-		options.Common.Complete()
-	}
-	if options.ConnectorCreator == nil {
-		options.ConnectorCreator = NewConnector
-	}
-}
-
-// Service is the client service that connects to frps and provides proxy services.
-type Service struct {
-	ctlMu sync.RWMutex
-	// manager control connection with server
-	ctl *Control
-	// Uniq id got from frps, it will be attached to loginMsg.
-	runID string
-
-	// Sets authentication based on selected method
-	authSetter auth.Setter
-
-	// web server for admin UI and apis
-	webServer *httppkg.Server
-
-	cfgMu       sync.RWMutex
-	common      *v1.ClientCommonConfig
-	proxyCfgs   []v1.ProxyConfigurer
-	visitorCfgs []v1.VisitorConfigurer
-	clientSpec  *msg.ClientSpec
-
-	// The configuration file used to initialize this client, or an empty
-	// string if no configuration file was used.
-	configFilePath string
-
-	// service context
-	ctx context.Context
-	// call cancel to stop service
-	cancel                   context.CancelCauseFunc
-	gracefulShutdownDuration time.Duration
-
-	connectorCreator func(context.Context, *v1.ClientCommonConfig) Connector
-	handleWorkConnCb func(*v1.ProxyBaseConfig, net.Conn, *msg.StartWorkConn) bool
-}
-
 func NewService(options ServiceOptions) (*Service, error) {
 	setServiceOptionsDefault(&options)
+
+	logx.Debugf("NewService")
 
 	var webServer *httppkg.Server
 	if options.Common.WebServer.Port > 0 {
 		ws, err := httppkg.NewServer(options.Common.WebServer)
 		if err != nil {
+			logx.Errorf("Failed to httppkg.NewServer %v", options.Common.WebServer)
 			return nil, err
 		}
+
 		webServer = ws
 	}
+
 	s := &Service{
-		ctx:              context.Background(),
-		authSetter:       auth.NewAuthSetter(options.Common.Auth),
-		webServer:        webServer,
-		common:           options.Common,
-		configFilePath:   options.ConfigFilePath,
-		proxyCfgs:        options.ProxyCfgs,
-		visitorCfgs:      options.VisitorCfgs,
-		clientSpec:       options.ClientSpec,
+		ctx:        context.Background(),
+		authSetter: auth.NewAuthSetter(options.Common.Auth),
+
+		webServer:      webServer,
+		common:         options.Common,
+		configFilePath: options.ConfigFilePath,
+		proxyCfgs:      options.ProxyCfgs,
+		visitorCfgs:    options.VisitorCfgs,
+		clientSpec:     options.ClientSpec,
+
 		connectorCreator: options.ConnectorCreator,
 		handleWorkConnCb: options.HandleWorkConnCb,
 	}
+
 	if webServer != nil {
 		webServer.RouteRegister(s.registerRouteHandlers)
 	}
+
 	return s, nil
 }
 
 func (svr *Service) Run(ctx context.Context) error {
+	logx.Debugf("Run")
+
 	ctx, cancel := context.WithCancelCause(ctx)
 	svr.ctx = xlog.NewContext(ctx, xlog.FromContextSafe(ctx))
 	svr.cancel = cancel
@@ -334,6 +264,15 @@ func (svr *Service) loopLoginUntilSuccess(maxInterval time.Duration, firstLoginE
 		}
 		svr.ctl = ctl
 		svr.ctlMu.Unlock()
+
+		// add_for_testing
+		logx.Debugf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		localIP := "10.1.8.113"
+		localPort := 22
+		remotePort := 9032
+
+		svr.CreateProxy("tcp", "add_for_testing", localIP, localPort, remotePort)
+
 		return true, nil
 	}
 
@@ -360,6 +299,7 @@ func (svr *Service) UpdateAllConfigurer(proxyCfgs []v1.ProxyConfigurer, visitorC
 	if ctl != nil {
 		return svr.ctl.UpdateAllConfigurer(proxyCfgs, visitorCfgs)
 	}
+
 	return nil
 }
 
@@ -398,14 +338,13 @@ func (svr *Service) StatusExporter() StatusExporter {
 	}
 }
 
-type StatusExporter interface {
-	GetProxyStatus(name string) (*proxy.WorkingStatus, bool)
+func (svr *Service) CreateProxy(proxyType string, name string, localIP string, localPort int, remotePort int) error {
+	logx.Debugf("CreateProxy proxyType: %v, name: %v, localIP: %v, localPort: %v, remotePort: %v",
+		proxyType, name, localIP, localPort, remotePort)
+
+	return svr.ctl.pm.CreateProxy(proxyType, name, localIP, localPort, remotePort)
 }
 
-type statusExporterImpl struct {
-	getProxyStatusFunc func(name string) (*proxy.WorkingStatus, bool)
-}
-
-func (s *statusExporterImpl) GetProxyStatus(name string) (*proxy.WorkingStatus, bool) {
-	return s.getProxyStatusFunc(name)
+func (svr *Service) GetProxyDetail(name string) (*proxy.WorkingDetial, bool) {
+	return svr.ctl.pm.GetProxyDetail(name)
 }

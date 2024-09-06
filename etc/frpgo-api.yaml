@@ -9,3 +9,9 @@ Log:
   Level: debug
   Mode: console
   Path: ./logs
+
+Frp:
+  Conf: ./conf/frpc.toml
+  LocalIP: localhost
+  LocalPort: 8080
+  RemotePort: 9080

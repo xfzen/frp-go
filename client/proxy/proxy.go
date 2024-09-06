@@ -27,6 +27,7 @@ import (
 	libio "github.com/fatedier/golib/io"
 	libnet "github.com/fatedier/golib/net"
 	pp "github.com/pires/go-proxyproto"
+	"github.com/zeromicro/go-zero/core/logx"
 	"golang.org/x/time/rate"
 
 	"frpgo/pkg/config/types"
@@ -97,6 +98,8 @@ type BaseProxy struct {
 }
 
 func (pxy *BaseProxy) Run() error {
+	logx.Debugf("BaseProxy Run()")
+
 	if pxy.baseCfg.Plugin.Type != "" {
 		p, err := plugin.Create(pxy.baseCfg.Plugin.Type, pxy.baseCfg.Plugin.ClientPluginOptions)
 		if err != nil {
@@ -128,6 +131,8 @@ func (pxy *BaseProxy) InWorkConn(conn net.Conn, m *msg.StartWorkConn) {
 
 // Common handler for tcp work connections.
 func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWorkConn, encKey []byte) {
+	logx.Debugf("HandleTCPWorkConnection")
+
 	xl := pxy.xl
 	baseCfg := pxy.baseCfg
 	var (

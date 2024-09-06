@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/fatedier/golib/errors"
+	"github.com/zeromicro/go-zero/core/logx"
 
 	"frpgo/client/event"
 	"frpgo/client/health"
@@ -49,11 +50,12 @@ var (
 )
 
 type WorkingStatus struct {
-	Name  string             `json:"name"`
-	Type  string             `json:"type"`
-	Phase string             `json:"status"`
-	Err   string             `json:"err"`
-	Cfg   v1.ProxyConfigurer `json:"cfg"`
+	Name     string             `json:"name"`
+	Type     string             `json:"type"`
+	Phase    string             `json:"status"`
+	Err      string             `json:"err"`
+	RemoteIP string             `json:"remote_ip"` // proxy server IP
+	Cfg      v1.ProxyConfigurer `json:"cfg"`
 
 	// Got from server.
 	RemoteAddr string `json:"remote_addr"`
@@ -96,10 +98,11 @@ func NewWrapper(
 	xl := xlog.FromContextSafe(ctx).Spawn().AppendPrefix(baseInfo.Name)
 	pw := &Wrapper{
 		WorkingStatus: WorkingStatus{
-			Name:  baseInfo.Name,
-			Type:  baseInfo.Type,
-			Phase: ProxyPhaseNew,
-			Cfg:   cfg,
+			Name:     baseInfo.Name,
+			Type:     baseInfo.Type,
+			Phase:    ProxyPhaseNew,
+			RemoteIP: clientCfg.ServerAddr,
+			Cfg:      cfg,
 		},
 		closeCh:        make(chan struct{}),
 		healthNotifyCh: make(chan struct{}),
@@ -126,6 +129,8 @@ func (pw *Wrapper) SetInWorkConnCallback(cb func(*v1.ProxyBaseConfig, net.Conn, 
 }
 
 func (pw *Wrapper) SetRunningStatus(remoteAddr string, respErr string) error {
+	logx.Debugf("SetRunningStatus remoteAddr: %v", remoteAddr)
+
 	pw.mu.Lock()
 	defer pw.mu.Unlock()
 	if pw.Phase != ProxyPhaseWaitStart {
@@ -275,5 +280,27 @@ func (pw *Wrapper) GetStatus() *WorkingStatus {
 		Cfg:        pw.Cfg,
 		RemoteAddr: pw.RemoteAddr,
 	}
+	return ps
+}
+
+func (pw *Wrapper) GetDetial() *WorkingDetial {
+	pw.mu.RLock()
+	defer pw.mu.RUnlock()
+
+	cfg := ConfigInfo{
+		Addr:    pw.Cfg.GetBaseConfig().LocalIP,
+		Inspect: false,
+	}
+
+	publicUrl := pw.RemoteIP + pw.RemoteAddr
+
+	ps := &WorkingDetial{
+		Name:      pw.Name,
+		Type:      pw.Type,
+		Status:    pw.Phase,
+		Config:    cfg,
+		PublicUrl: publicUrl,
+	}
+
 	return ps
 }
