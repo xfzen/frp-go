@@ -33,9 +33,12 @@ type GetTunnelDetailReq struct {
 }
 
 type GetTunnelDetialResp struct {
-	Token        string `json:"token"`
-	AccessExpire string `json:"accessExpire"`
-	RefreshAfter string `json:"refreshAfter"`
+	Name      string     `json:"name"`       //
+	URI       string     `json:"uri"`        // /api/tunnels
+	PublicUrl string     `json:"public_url"` // tcp://****.3232
+	Type      string     `json:"type"`       // tcp
+	Status    string     `json:"status"`     // tcp
+	Config    ConfigInfo `json:"config"`     //
 }
 
 type ListCaptureRequestResp struct {

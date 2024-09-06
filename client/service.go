@@ -265,14 +265,6 @@ func (svr *Service) loopLoginUntilSuccess(maxInterval time.Duration, firstLoginE
 		svr.ctl = ctl
 		svr.ctlMu.Unlock()
 
-		// add_for_testing
-		logx.Debugf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-		localIP := "10.1.8.113"
-		localPort := 22
-		remotePort := 9032
-
-		svr.CreateProxy("tcp", "add_for_testing", localIP, localPort, remotePort)
-
 		return true, nil
 	}
 
