@@ -1,0 +1,16 @@
+info(
+	title: "frp client sdk"
+	desc: "frp client"
+	author: "essen"
+	email: "hoksum.guo@gmail.com"
+)
+
+@server(
+	group: frpgo/test
+	prefix: /api/v1/frp
+)
+
+service frpgo-api {
+	@handler frpgoPing
+	get /ping
+}

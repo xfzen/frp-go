@@ -1,0 +1,11 @@
+Name: frpgo-api
+Host: 0.0.0.0
+Port: 8888
+
+Log:
+  ServiceName: frp-go
+  Encoding: plain
+  KeepDays: 60
+  Level: debug
+  Mode: console
+  Path: ./logs
