@@ -6,6 +6,7 @@ require (
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/fatedier/golib v0.5.0
+	github.com/go-resty/resty/v2 v2.14.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/yamux v0.1.1
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f

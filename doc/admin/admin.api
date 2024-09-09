@@ -28,7 +28,8 @@ service frpgo-api {
 
 type (
   ConfigInfo {
-    Addr      string `json:"addr"`
+    LocalIP  	string `json:"local_ip"` 
+		LocalPort  	int `json:"local_port"` 		
 		Inspect   bool `json:"inspect"`
   }
 

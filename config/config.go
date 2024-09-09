@@ -9,4 +9,9 @@ type Config struct {
 	Frp struct {
 		Conf string
 	}
+
+	// webhook
+	Webhook struct {
+		Url string
+	}
 }

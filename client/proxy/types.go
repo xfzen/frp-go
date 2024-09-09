@@ -1,8 +1,9 @@
 package proxy
 
 type ConfigInfo struct {
-	Addr    string `json:"addr"`
-	Inspect bool   `json:"inspect"`
+	LocalIP   string `json:"local_ip"`
+	LocalPort int    `json:"local_port"`
+	Inspect   bool   `json:"inspect"`
 }
 
 type WorkingDetial struct {

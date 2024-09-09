@@ -288,8 +288,9 @@ func (pw *Wrapper) GetDetial() *WorkingDetial {
 	defer pw.mu.RUnlock()
 
 	cfg := ConfigInfo{
-		Addr:    pw.Cfg.GetBaseConfig().LocalIP,
-		Inspect: false,
+		LocalIP:   pw.Cfg.GetBaseConfig().LocalIP,
+		LocalPort: pw.Cfg.GetBaseConfig().LocalPort,
+		Inspect:   false,
 	}
 
 	publicUrl := pw.RemoteIP + pw.RemoteAddr

@@ -22,6 +22,7 @@ import (
 
 	"frpgo/client/proxy"
 	"frpgo/client/visitor"
+	"frpgo/fmgr/webhook"
 	"frpgo/pkg/auth"
 	v1 "frpgo/pkg/config/v1"
 	"frpgo/pkg/msg"
@@ -173,6 +174,13 @@ func (ctl *Control) handleNewProxyResp(m msg.Message) {
 		xl.Warnf("[%s] start error: %v", inMsg.ProxyName, err)
 	} else {
 		xl.Infof("[%s] start proxy success", inMsg.ProxyName)
+
+		// webhook
+		proxyDetial, isSuccess := ctl.pm.GetProxyDetail(inMsg.ProxyName)
+		if isSuccess {
+			webhook.PushProxyDetail(utils2.PrettyJson(proxyDetial))
+		}
+
 	}
 }
 

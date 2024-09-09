@@ -12,3 +12,6 @@ Log:
 
 Frp:
   Conf: ./conf/frpc.toml
+
+Webhook:
+  Url: http://localhost:8080/webhook

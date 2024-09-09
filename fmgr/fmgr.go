@@ -9,6 +9,7 @@ import (
 
 	"frpgo/client"
 	gconfig "frpgo/config"
+	"frpgo/fmgr/webhook"
 	"frpgo/pkg/config"
 	"frpgo/pkg/util/log"
 	"frpgo/pkg2/utils2"
@@ -18,6 +19,9 @@ import (
 
 func CreateService(c gconfig.Config) (*client.Service, error) {
 	logx.Debugf("CreateService Frp Conf: %v", utils2.PrettyJson(c.Frp))
+
+	// setup webhook
+	webhook.Setup(c)
 
 	cfg, _, _, _, err := config.LoadClientConfig(c.Frp.Conf, true)
 	if err != nil {
