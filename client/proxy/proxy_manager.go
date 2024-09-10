@@ -207,7 +207,6 @@ func (pm *Manager) CreateProxy(proxyType string, name string, localIP string, lo
 	case string(v1.ProxyTypeHTTP):
 		cfg.(*v1.HTTPProxyConfig).LocalIP = localIP
 		cfg.(*v1.HTTPProxyConfig).LocalPort = localPort
-		cfg.(*v1.HTTPProxyConfig). = localPort
 
 	default:
 		cfg.(*v1.HTTPProxyConfig).LocalIP = localIP
