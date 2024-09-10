@@ -178,9 +178,8 @@ func (ctl *Control) handleNewProxyResp(m msg.Message) {
 		// webhook
 		proxyDetial, isSuccess := ctl.pm.GetProxyDetail(inMsg.ProxyName)
 		if isSuccess {
-			webhook.PushProxyDetail(utils2.PrettyJson(proxyDetial))
+			webhook.PushProxyDetail(proxyDetial)
 		}
-
 	}
 }
 

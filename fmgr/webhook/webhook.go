@@ -23,11 +23,11 @@ func Setup(c config.Config) {
 	logx.Debugf("Setup url: %v", whUrl)
 }
 
-func PushProxyDetail(data string) {
+func PushProxyDetail(data interface{}) {
 	go webhook(whUrl, data)
 }
 
-func webhook(url string, data string) error {
+func webhook(url string, data interface{}) error {
 	logx.Debugf("PushProxyDetail url: %v, data: %v", url, data)
 
 	r, err := post(url, data)

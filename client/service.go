@@ -28,6 +28,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 
 	"frpgo/client/proxy"
+	"frpgo/fmgr/webhook"
 	"frpgo/pkg/auth"
 	v1 "frpgo/pkg/config/v1"
 	"frpgo/pkg/msg"
@@ -334,9 +335,19 @@ func (svr *Service) CreateProxy(proxyType string, name string, localIP string, l
 	logx.Debugf("CreateProxy proxyType: %v, name: %v, localIP: %v, localPort: %v, remotePort: %v",
 		proxyType, name, localIP, localPort, remotePort)
 
-	return svr.ctl.pm.CreateProxy(proxyType, name, localIP, localPort, remotePort)
+	// 若proxyName已存在，则不创建，通过webhook返回已有的代理详情
+	isExist := svr.ctl.pm.IsProxyExist(name)
+	if isExist {
+		return errors.New("proxy is already exist")
+	} else {
+		return svr.ctl.pm.CreateProxy(proxyType, name, localIP, localPort, remotePort)
+	}
 }
 
 func (svr *Service) GetProxyDetail(name string) (*proxy.WorkingDetial, bool) {
-	return svr.ctl.pm.GetProxyDetail(name)
+	proxyDetial, isSuccess := svr.ctl.pm.GetProxyDetail(name)
+	if isSuccess {
+		webhook.PushProxyDetail(proxyDetial)
+	}
+	return proxyDetial, isSuccess
 }

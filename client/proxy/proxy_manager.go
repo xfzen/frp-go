@@ -25,6 +25,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 
 	"frpgo/client/event"
+	"frpgo/fmgr/webhook"
 	v1 "frpgo/pkg/config/v1"
 	"frpgo/pkg/msg"
 	"frpgo/pkg/transport"
@@ -192,16 +193,24 @@ func (pm *Manager) CreateProxy(proxyType string, name string, localIP string, lo
 
 	cfg.GetBaseConfig().Name = name
 	cfg.GetBaseConfig().Type = proxyType
-	cfg.GetBaseConfig().LocalIP = localIP
+	// cfg.GetBaseConfig().LocalIP = localIP
 	cfg.GetBaseConfig().LocalPort = localPort
 
 	serverIp := pm.clientCfg.ServerAddr
 
 	switch proxyType {
 	case string(v1.ProxyTypeTCP):
+		cfg.(*v1.TCPProxyConfig).LocalIP = localIP
+		cfg.(*v1.TCPProxyConfig).LocalPort = localPort
 		cfg.(*v1.TCPProxyConfig).RemotePort = remotePort
+
+	case string(v1.ProxyTypeHTTP):
+		cfg.(*v1.HTTPProxyConfig).LocalIP = localIP
+		cfg.(*v1.HTTPProxyConfig).LocalPort = localPort
+		cfg.(*v1.HTTPProxyConfig). = localPort
+
 	default:
-		cfg.(*v1.TCPProxyConfig).RemotePort = remotePort
+		cfg.(*v1.HTTPProxyConfig).LocalIP = localIP
 	}
 
 	logx.Debugf("CreateProxy serverIp: %v, proxyCfg: %v", serverIp, utils2.PrettyJson(cfg))
@@ -225,4 +234,22 @@ func (pm *Manager) GetProxyDetail(name string) (*WorkingDetial, bool) {
 		return pxy.GetDetial(), true
 	}
 	return nil, false
+}
+
+// 代理是否已创建
+func (pm *Manager) IsProxyExist(name string) bool {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+	if _, ok := pm.proxies[name]; ok {
+		// webhook
+		proxyDetial, isSuccess := pm.GetProxyDetail(name)
+		if isSuccess {
+			webhook.PushProxyDetail(proxyDetial)
+
+			return true
+		}
+		return false
+	}
+
+	return false
 }
